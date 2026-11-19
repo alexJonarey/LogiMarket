@@ -7,23 +7,23 @@ namespace LogiMarket.Domain.Entities;
 // productos individuales u otros kits compuestos.
 public class KitCompuesto : IComponenteCatalogo
 {
-    private readonly List<IComponenteCatalogo> _componentes = new();
+    private readonly List<ComponenteKit> _componentes = new();
 
     public string SKU { get; private set; }
 
     public string Nombre { get; private set; }
 
-    // El precio del kit se obtiene sumando
-    // los precios de sus componentes.
+    // El precio considera la cantidad de cada componente.
     public decimal Precio => _componentes.Sum(
-        componente => componente.Precio);
+        componente => componente.Componente.Precio *
+                      componente.Cantidad);
 
-    // El peso se obtiene sumando los pesos
-    // de sus componentes.
+    // El peso considera la cantidad de cada componente.
     public decimal PesoKg => _componentes.Sum(
-        componente => componente.PesoKg);
+        componente => componente.Componente.PesoKg *
+                      componente.Cantidad);
 
-    public IReadOnlyCollection<IComponenteCatalogo> Componentes =>
+    public IReadOnlyCollection<ComponenteKit> Componentes =>
         _componentes.AsReadOnly();
 
     public KitCompuesto(string sku, string nombre)
@@ -38,10 +38,10 @@ public class KitCompuesto : IComponenteCatalogo
         Nombre = nombre.Trim();
     }
 
-    // Agrega un producto o kit al kit actual.
-   
-    // Agrega un producto o kit al kit actual.
-    public void AgregarComponente(IComponenteCatalogo componente)
+    // Agrega un producto o kit indicando su cantidad.
+    public void AgregarComponente(
+        IComponenteCatalogo componente,
+        int cantidad = 1)
     {
         if (componente == null)
             throw new ArgumentNullException(nameof(componente));
@@ -58,7 +58,9 @@ public class KitCompuesto : IComponenteCatalogo
                 "No se puede agregar el kit porque generaría un ciclo.");
         }
 
-        _componentes.Add(componente);
+        ComponenteKit nuevoComponente = new(componente, cantidad);
+
+        _componentes.Add(nuevoComponente);
     }
 
     // Comprueba recursivamente si este kit contiene
@@ -68,9 +70,9 @@ public class KitCompuesto : IComponenteCatalogo
         if (ReferenceEquals(this, kitBuscado))
             return true;
 
-        foreach (IComponenteCatalogo componente in _componentes)
+        foreach (ComponenteKit componente in _componentes)
         {
-            if (componente is KitCompuesto kit &&
+            if (componente.Componente is KitCompuesto kit &&
                 kit.ContieneKit(kitBuscado))
             {
                 return true;
@@ -80,4 +82,10 @@ public class KitCompuesto : IComponenteCatalogo
         return false;
     }
 
+    // Permite recorrer los productos físicos del kit
+// mediante el patrón Iterator.
+public IIteradorComponentes CrearIteradorComponentes()
+{
+    return new IteradorComponentesFisicos(this);
+}
 }
