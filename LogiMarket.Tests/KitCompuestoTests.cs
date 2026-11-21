@@ -201,5 +201,36 @@ public void CrearIteradorSnapshot_ModificarKitOriginal_DebeConservarProductosOri
         new[] { "P01", "P02" },
         productosEncontrados);
 }
+[Fact]
+public void CrearIteradorSnapshot_CantidadDosKits_DebeDuplicarProductos()
+{
+    // Arrange: crear los productos.
+    Producto mouse = new("P01", "Mouse USB", 20m, 8, 0.20m);
+    Producto teclado = new("P02", "Teclado", 30m, 5, 0.70m);
+
+    // Crear un kit con ambos productos.
+    KitCompuesto kitOficina = new("KIT_OFICINA", "Kit Oficina");
+    kitOficina.AgregarComponente(mouse);
+    kitOficina.AgregarComponente(teclado);
+
+    // Registrar la compra de dos kits.
+    DetallePedido detalle = new(kitOficina, 2);
+
+    // Act: recorrer la composición guardada en el pedido.
+    IIteradorSnapshotComponentes iterador =
+        detalle.Composicion.CrearIteradorComponentesFisicos();
+
+    List<string> productosEncontrados = new();
+
+    while (iterador.TieneSiguiente())
+    {
+        productosEncontrados.Add(iterador.Siguiente().SKU);
+    }
+
+    // Assert: cada producto debe aparecer dos veces.
+    Assert.Equal(
+        new[] { "P01", "P01", "P02", "P02" },
+        productosEncontrados);
+}
 
 }

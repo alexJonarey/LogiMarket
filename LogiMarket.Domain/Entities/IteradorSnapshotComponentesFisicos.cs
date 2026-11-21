@@ -13,14 +13,14 @@ public class IteradorSnapshotComponentesFisicos
 
     private int _posicionActual;
 
-    public IteradorSnapshotComponentesFisicos(
-        ComponentePedidoSnapshot componenteRaiz)
-    {
-        if (componenteRaiz == null)
-            throw new ArgumentNullException(nameof(componenteRaiz));
+   public IteradorSnapshotComponentesFisicos(
+    ComponentePedidoSnapshot componenteRaiz)
+{
+    if (componenteRaiz == null)
+        throw new ArgumentNullException(nameof(componenteRaiz));
 
-        ExpandirComponente(componenteRaiz, 1);
-    }
+    ExpandirComponente(componenteRaiz, componenteRaiz.Cantidad);
+}
 
     // Expande kits anidados usando exclusivamente
     // la composición guardada en el snapshot.
