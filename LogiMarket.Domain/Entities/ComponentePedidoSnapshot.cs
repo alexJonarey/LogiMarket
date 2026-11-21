@@ -71,4 +71,10 @@ public class ComponentePedidoSnapshot
 
         return snapshot;
     }
+    // Permite recorrer los productos físicos
+// conservados en este snapshot.
+public IIteradorSnapshotComponentes CrearIteradorComponentesFisicos()
+{
+    return new IteradorSnapshotComponentesFisicos(this);    
+}
 }
