@@ -232,5 +232,68 @@ public void CrearIteradorSnapshot_CantidadDosKits_DebeDuplicarProductos()
         new[] { "P01", "P01", "P02", "P02" },
         productosEncontrados);
 }
+[Fact]
+public void DesgloseInventario_KitAnidado_DebeCalcularCantidadesFisicas()
+{
+    // Arrange
+    Producto mouse = new("P01", "Mouse USB", 20m, 8, 0.20m);
+    Producto teclado = new("P02", "Teclado", 30m, 5, 0.70m);
+    Producto memoria = new("P03", "Memoria USB", 10m, 20, 0.10m);
 
+    KitCompuesto kitOficina = new("KIT_OFICINA", "Kit Oficina");
+    kitOficina.AgregarComponente(mouse);
+    kitOficina.AgregarComponente(teclado);
+
+    KitCompuesto kitTeletrabajo = new("KIT_TELETRABAJO", "Kit Teletrabajo");
+    kitTeletrabajo.AgregarComponente(kitOficina);
+    kitTeletrabajo.AgregarComponente(memoria);
+
+    Cliente cliente = new("Ana", LogiMarket.Domain.Enums.CategoriaCliente.VIP);
+    Pedido pedido = new(cliente);
+
+    pedido.AgregarDetalle(kitTeletrabajo, 2);
+    pedido.AgregarDetalle(memoria, 3);
+
+    // Act
+    List<ProductoInventarioDesglosado> resultado = pedido.Detalles
+        .SelectMany(detalle => DesgloseInventario.Calcular(detalle))
+        .GroupBy(producto => producto.SKU)
+        .Select(grupo => new ProductoInventarioDesglosado(
+            grupo.Key,
+            grupo.First().Nombre,
+            grupo.Sum(producto => producto.Cantidad)))
+        .ToList();
+
+    // Assert
+    Assert.Equal(3, resultado.Count);
+    Assert.Contains(resultado, producto => producto.SKU == "P01" && producto.Cantidad == 2);
+    Assert.Contains(resultado, producto => producto.SKU == "P02" && producto.Cantidad == 2);
+    Assert.Contains(resultado, producto => producto.SKU == "P03" && producto.Cantidad == 5);
+}
+[Fact]
+public void DesgloseInventario_MismoSKURepetido_DebeSumarCantidades()
+{
+    // Arrange
+    Producto memoria = new("P03", "Memoria USB", 10m, 20, 0.10m);
+
+    KitCompuesto kit = new("KIT_MEMORIAS", "Kit Memorias");
+    kit.AgregarComponente(memoria, 2);
+    kit.AgregarComponente(memoria, 3);
+
+    Cliente cliente = new("Luis", LogiMarket.Domain.Enums.CategoriaCliente.NORMAL);
+    Pedido pedido = new(cliente);
+
+    pedido.AgregarDetalle(kit, 1);
+
+    // Act
+    IReadOnlyCollection<ProductoInventarioDesglosado> resultado =
+        DesgloseInventario.Calcular(pedido.Detalles.First());
+
+    // Assert
+    ProductoInventarioDesglosado producto =
+        Assert.Single(resultado);
+
+    Assert.Equal("P03", producto.SKU);
+    Assert.Equal(5, producto.Cantidad);
+}
 }
