@@ -4,7 +4,7 @@ using LogiMarket.Domain.Interfaces;
 namespace LogiMarket.Domain.Entities;
 
 // ENTIDAD: representa una línea de un pedido.
-// Conserva una instantánea del componente comprado.
+// Conserva una instantánea del producto o kit comprado.
 public class DetallePedido
 {
     public int Id { get; private set; }
@@ -20,6 +20,9 @@ public class DetallePedido
     public decimal PrecioUnitario { get; private set; }
 
     public decimal PesoUnitarioKg { get; private set; }
+
+    // Conserva la composición original del producto o kit.
+    public ComponentePedidoSnapshot Composicion { get; private set; } = null!;
 
     public decimal Subtotal => PrecioUnitario * Cantidad;
 
@@ -41,12 +44,17 @@ public class DetallePedido
         if (cantidad <= 0)
             throw new ArgumentOutOfRangeException(
                 nameof(cantidad),
-                "La cantidad debe ser mayor que cero.");
+            "La cantidad debe ser mayor que cero.");
 
         SKU = componente.SKU;
         NombreProducto = componente.Nombre;
         Cantidad = cantidad;
         PrecioUnitario = componente.Precio;
         PesoUnitarioKg = componente.PesoKg;
+
+        // Se crea una copia independiente del catálogo.
+        Composicion = ComponentePedidoSnapshot.Crear(
+            componente,
+            cantidad);
     }
 }
