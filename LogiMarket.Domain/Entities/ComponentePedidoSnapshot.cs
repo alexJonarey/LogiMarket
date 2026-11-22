@@ -77,4 +77,30 @@ public IIteradorSnapshotComponentes CrearIteradorComponentesFisicos()
 {
     return new IteradorSnapshotComponentesFisicos(this);    
 }
+// PROTOTYPE:
+// crea una copia independiente de un Snapshot existente.
+public static ComponentePedidoSnapshot CrearDesdeSnapshot(
+    ComponentePedidoSnapshot original)
+{
+    if (original == null)
+        throw new ArgumentNullException(nameof(original));
+
+    ComponentePedidoSnapshot copia = new(
+        original.SKU,
+        original.Nombre,
+        original.Cantidad,
+        original.PrecioUnitario,
+        original.PesoUnitarioKg);
+
+    // Copia también los componentes internos de los kits.
+    foreach (ComponentePedidoSnapshot componente in original.Componentes)
+    {
+        ComponentePedidoSnapshot componenteClonado =
+            CrearDesdeSnapshot(componente);
+
+        copia._componentes.Add(componenteClonado);
+    }
+
+    return copia;
+}
 }
