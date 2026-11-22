@@ -60,4 +60,14 @@ public class Producto : IComponenteCatalogo
         Stock = stock;
         PesoKg = pesoKg;
     }
+    // Permite actualizar el precio del producto en el catálogo.
+public void CambiarPrecio(decimal nuevoPrecio)
+{
+    if (nuevoPrecio <= 0)
+        throw new ArgumentOutOfRangeException(
+            nameof(nuevoPrecio),
+            "El precio debe ser mayor que cero.");
+
+    Precio = nuevoPrecio;
+}
 }
